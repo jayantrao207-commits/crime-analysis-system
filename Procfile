@@ -1,0 +1,1 @@
+web: pip install folium streamlit-folium pandas && streamlit run app.py
