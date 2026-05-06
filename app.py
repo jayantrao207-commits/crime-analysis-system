@@ -153,6 +153,19 @@ search = st.sidebar.text_input(
     "🔎 Search"
 )
 
+if search:
+
+    search = search.lower()
+
+    f = f[
+        f.astype(str)
+        .apply(
+            lambda row:
+            row.str.lower().str.contains(search).any(),
+            axis=1
+        )
+    ]
+
 # KPI CARDS
 # =====================================================
 
