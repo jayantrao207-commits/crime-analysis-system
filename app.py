@@ -163,27 +163,47 @@ c1, c2, c3, c4 = st.columns(4)
 
 with c1:
     st.markdown(
-        f"<div class='card'><h3>📊 Total</h3><h2>{len(f)}</h2></div>",
+        f"""
+        <div class='card'>
+        <h3>📊 Total</h3>
+        <h1>{len(f)}</h1>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 with c2:
     top_area = f['Area'].value_counts().idxmax() if len(f) else "-"
     st.markdown(
-        f"<div class='card'><h3>📍 Top Area</h3><h2>{top_area}</h2></div>",
+        f"""
+        <div class='card'>
+        <h3>📍 Top Area</h3>
+        <h1>{top_area}</h1>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 with c3:
     top_crime = f['Crime_Type'].value_counts().idxmax() if len(f) else "-"
     st.markdown(
-        f"<div class='card'><h3>🚨 Top Crime</h3><h2>{top_crime}</h2></div>",
+        f"""
+        <div class='card'>
+        <h3>🚨 Top Crime</h3>
+        <h1>{top_crime}</h1>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 with c4:
     st.markdown(
-        f"<div class='card'><h3>🧭 Areas Covered</h3><h2>{f['Area'].nunique()}</h2></div>",
+        f"""
+        <div class='card'>
+        <h3>🧭 Areas Covered</h3>
+        <h1>{f['Area'].nunique()}</h1>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
@@ -274,22 +294,31 @@ with tab2:
             tiles=tile
         )
 
+        # Weighted heatmap
+        heat_df = (
+            f.groupby(['Latitude', 'Longitude'])
+            .size()
+            .reset_index(name='count')
+        )
+
         heat_data = []
 
-        for _, row in f.iterrows():
+        for _, row in heat_df.iterrows():
 
             heat_data.append([
                 float(row['Latitude']),
-                float(row['Longitude'])
+                float(row['Longitude']),
+                int(row['count'])
             ])
 
         if len(heat_data) > 0:
 
             HeatMap(
                 heat_data,
-                radius=18,
-                blur=12,
-                min_opacity=0.4
+                radius=35,
+                blur=20,
+                min_opacity=0.5,
+                max_zoom=10
             ).add_to(m2)
 
         st_folium(
