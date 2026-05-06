@@ -149,52 +149,10 @@ hour_range = st.sidebar.slider(
 )
 
 # SEARCH
-# =====================================================
-# SAFE SEARCH FILTER (NO CRASH VERSION)
-# =====================================================
-
-# SEARCH BOX
 search = st.sidebar.text_input(
     "🔎 Search (area / crime / date)"
 )
 
-# APPLY SEARCH
-if search:
-
-    search = search.lower().strip()
-
-    f = f[
-        f.astype(str)
-        .apply(
-            lambda row:
-            row.str.lower().str.contains(search).any(),
-            axis=1
-        )
-    ]
-
-# =====================================================
-# SAFE KPI VALUES
-# =====================================================
-
-total_crimes = int(len(f))
-
-if total_crimes > 0:
-
-    top_area = f['Area'].value_counts().idxmax()
-
-    top_crime = f['Crime_Type'].value_counts().idxmax()
-
-    total_areas = f['Area'].nunique()
-
-else:
-
-    top_area = "No Data"
-
-    top_crime = "No Data"
-
-    total_areas = 0
-
-# =====================================================
 # KPI CARDS
 # =====================================================
 
