@@ -4,17 +4,17 @@ import folium
 from streamlit_folium import st_folium
 from folium.plugins import MarkerCluster, HeatMap
 
-# -----------------------------
+# ------------------------------------------------
 # PAGE CONFIG
-# -----------------------------
+# ------------------------------------------------
 st.set_page_config(
-    page_title="Crime Dashboard",
+    page_title="Crime Analytics Dashboard",
     layout="wide"
 )
 
-# -----------------------------
+# ------------------------------------------------
 # CUSTOM CSS
-# -----------------------------
+# ------------------------------------------------
 st.markdown("""
 <style>
 
@@ -23,23 +23,22 @@ st.markdown("""
     color: white;
 }
 
+/* Sidebar */
 section[data-testid="stSidebar"] {
     background: linear-gradient(to bottom, #020617, #0f172a);
     border-right: 1px solid #334155;
 }
 
-h1, h2, h3, h4 {
-    color: white;
-}
-
+/* Cards */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 20px;
-    border-radius: 18px;
+    border-radius: 20px;
     backdrop-filter: blur(10px);
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    box-shadow: 0 0 20px rgba(0,0,0,0.35);
 }
 
+/* Titles */
 .title {
     font-size: 42px;
     font-weight: bold;
@@ -53,12 +52,28 @@ h1, h2, h3, h4 {
     margin-bottom: 20px;
 }
 
+/* Headings */
+h1,h2,h3,h4 {
+    color: white;
+}
+
+/* Metric numbers */
+.metric {
+    font-size: 42px;
+    font-weight: bold;
+}
+
+/* Dataframe */
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
+# ------------------------------------------------
 # HEADER
-# -----------------------------
+# ------------------------------------------------
 st.markdown(
     "<div class='title'>🚔 Crime Analytics Dashboard</div>",
     unsafe_allow_html=True
@@ -69,9 +84,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# -----------------------------
+# ------------------------------------------------
 # LOAD DATA
-# -----------------------------
+# ------------------------------------------------
 df = pd.read_csv("crime_india_dataset.csv")
 
 df.columns = df.columns.str.strip()
@@ -81,10 +96,10 @@ df['Date_Time'] = pd.to_datetime(df['Date_Time'])
 df['date'] = df['Date_Time'].dt.date
 df['hour'] = df['Date_Time'].dt.hour
 
-# -----------------------------
+# ------------------------------------------------
 # SIDEBAR
-# -----------------------------
-st.sidebar.markdown("## 🎛️ Control Panel")
+# ------------------------------------------------
+st.sidebar.markdown("# 🎛️ Control Panel")
 st.sidebar.markdown("---")
 
 # Area filter
@@ -93,7 +108,7 @@ area = st.sidebar.selectbox(
     ["All"] + sorted(df['Area'].unique())
 )
 
-# Crime type filter
+# Crime filter
 crime = st.sidebar.multiselect(
     "🚨 Crime Type",
     sorted(df['Crime_Type'].unique()),
@@ -114,7 +129,7 @@ hour_range = st.sidebar.slider(
     (0, 23)
 )
 
-# Search box
+# Search
 search = st.sidebar.text_input(
     "🔎 Search (area/crime keyword)"
 )
@@ -129,9 +144,9 @@ tile = st.sidebar.selectbox(
     ]
 )
 
-# -----------------------------
+# ------------------------------------------------
 # FILTER DATA
-# -----------------------------
+# ------------------------------------------------
 f = df.copy()
 
 if area != "All":
@@ -156,97 +171,105 @@ if search:
         f['Crime_Type'].str.contains(search, case=False, na=False)
     ]
 
-# -----------------------------
+# ------------------------------------------------
 # KPI CARDS
-# -----------------------------
+# ------------------------------------------------
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
-    st.markdown(
-        f"""
-        <div class='card'>
-        <h3>📊 Total</h3>
-        <h1>{len(f)}</h1>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(f"""
+    <div class='card'>
+        <h3>📊 Total Crimes</h3>
+        <div class='metric'>{len(f)}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with c2:
     top_area = f['Area'].value_counts().idxmax() if len(f) else "-"
-    st.markdown(
-        f"""
-        <div class='card'>
+    st.markdown(f"""
+    <div class='card'>
         <h3>📍 Top Area</h3>
-        <h1>{top_area}</h1>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div class='metric'>{top_area}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with c3:
     top_crime = f['Crime_Type'].value_counts().idxmax() if len(f) else "-"
-    st.markdown(
-        f"""
-        <div class='card'>
+    st.markdown(f"""
+    <div class='card'>
         <h3>🚨 Top Crime</h3>
-        <h1>{top_crime}</h1>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div class='metric'>{top_crime}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with c4:
-    st.markdown(
-        f"""
-        <div class='card'>
+    st.markdown(f"""
+    <div class='card'>
         <h3>🧭 Areas Covered</h3>
-        <h1>{f['Area'].nunique()}</h1>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div class='metric'>{f['Area'].nunique()}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# -----------------------------
+# ------------------------------------------------
 # TABS
-# -----------------------------
+# ------------------------------------------------
 tab1, tab2, tab3 = st.tabs([
     "📊 Overview",
     "🗺️ Maps",
     "📋 Data"
 ])
 
-# -----------------------------
+# ------------------------------------------------
 # OVERVIEW TAB
-# -----------------------------
+# ------------------------------------------------
 with tab1:
 
     col1, col2 = st.columns(2)
 
     with col1:
+
         st.subheader("📊 Crime Rate by Area")
-        st.bar_chart(f.groupby('Area').size())
+
+        area_chart = (
+            f.groupby('Area')
+            .size()
+            .sort_values(ascending=False)
+        )
+
+        st.bar_chart(area_chart)
 
     with col2:
-        st.subheader("🚨 Crime Type Distribution")
-        st.bar_chart(f['Crime_Type'].value_counts())
 
-    st.subheader("📈 Crime Trend")
-    trend = f.groupby('date').size()
+        st.subheader("🚨 Crime Type Distribution")
+
+        crime_chart = (
+            f['Crime_Type']
+            .value_counts()
+        )
+
+        st.bar_chart(crime_chart)
+
+    st.subheader("📈 Crime Trend Over Time")
+
+    trend = (
+        f.groupby('date')
+        .size()
+    )
+
     st.line_chart(trend)
 
-# -----------------------------
+# ------------------------------------------------
 # MAP TAB
-# -----------------------------
+# ------------------------------------------------
 with tab2:
 
     col1, col2 = st.columns(2)
 
     center = [23.5, 78.9]
 
-    # -------------------------
+    # ------------------------------------------------
     # CLUSTER MAP
-    # -------------------------
+    # ------------------------------------------------
     with col1:
 
         st.markdown("## 🗺️ Cluster Map")
@@ -281,9 +304,9 @@ with tab2:
             height=500
         )
 
-    # -------------------------
+    # ------------------------------------------------
     # HEATMAP
-    # -------------------------
+    # ------------------------------------------------
     with col2:
 
         st.markdown("## 🔥 Crime Density Heatmap")
@@ -301,21 +324,21 @@ with tab2:
             .reset_index(name='Crime_Count')
         )
 
-        # Average coordinates of each area
-        city_coords = (
+        # Coordinates
+        coords = (
             f.groupby('Area')[['Latitude', 'Longitude']]
             .mean()
             .reset_index()
         )
 
-        # Merge both
+        # Merge
         heat_df = pd.merge(
             area_counts,
-            city_coords,
+            coords,
             on='Area'
         )
 
-        # Weighted heatmap data
+        # Heat data
         heat_data = []
 
         for _, row in heat_df.iterrows():
@@ -323,27 +346,29 @@ with tab2:
             heat_data.append([
                 float(row['Latitude']),
                 float(row['Longitude']),
-                int(row['Crime_Count']) * 10
+                int(row['Crime_Count']) * 50
             ])
 
-        # Heatmap layer
+        # Heat layer
         HeatMap(
             heat_data,
-            radius=50,
-            blur=30,
-            min_opacity=0.4,
-            max_zoom=10
+            radius=35,
+            blur=20,
+            min_opacity=0.5
         ).add_to(m2)
+
+        folium.LayerControl().add_to(m2)
 
         st_folium(
             m2,
             width=700,
-            height=500
+            height=500,
+            returned_objects=[]
         )
 
-# -----------------------------
+# ------------------------------------------------
 # DATA TAB
-# -----------------------------
+# ------------------------------------------------
 with tab3:
 
     st.subheader("📋 Crime Records")
@@ -353,6 +378,7 @@ with tab3:
         use_container_width=True
     )
 
+    # Download CSV
     csv = f.to_csv(index=False).encode('utf-8')
 
     st.download_button(
