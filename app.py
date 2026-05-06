@@ -149,9 +149,96 @@ hour_range = st.sidebar.slider(
 )
 
 # SEARCH
+# =====================================================
+# SAFE SEARCH FILTER (NO CRASH VERSION)
+# =====================================================
+
+# SEARCH BOX
 search = st.sidebar.text_input(
-    "🔎 Search"
+    "🔎 Search (area / crime / date)"
 )
+
+# APPLY SEARCH
+if search:
+
+    search = search.lower().strip()
+
+    f = f[
+        f.astype(str)
+        .apply(
+            lambda row:
+            row.str.lower().str.contains(search).any(),
+            axis=1
+        )
+    ]
+
+# =====================================================
+# SAFE KPI VALUES
+# =====================================================
+
+total_crimes = int(len(f))
+
+if total_crimes > 0:
+
+    top_area = f['Area'].value_counts().idxmax()
+
+    top_crime = f['Crime_Type'].value_counts().idxmax()
+
+    total_areas = f['Area'].nunique()
+
+else:
+
+    top_area = "No Data"
+
+    top_crime = "No Data"
+
+    total_areas = 0
+
+# =====================================================
+# KPI CARDS
+# =====================================================
+
+c1, c2, c3, c4 = st.columns(4)
+
+with c1:
+    st.metric(
+        "📊 Total Crimes",
+        total_crimes
+    )
+
+with c2:
+    st.metric(
+        "📍 Top Area",
+        top_area
+    )
+
+with c3:
+    st.metric(
+        "🚨 Top Crime",
+        top_crime
+    )
+
+with c4:
+    st.metric(
+        "🧭 Areas Covered",
+        total_areas
+    )
+
+# =====================================================
+# EMPTY DATA WARNING
+# =====================================================
+
+if total_crimes == 0:
+
+    st.warning(
+        "⚠ No matching records found. Try another search."
+    )
+
+else:
+
+    st.success(
+        f"✅ {total_crimes} matching crime records found."
+    )
 
 # MAP STYLE
 tile = st.sidebar.selectbox(
