@@ -150,7 +150,7 @@ hour_range = st.sidebar.slider(
 
 # SEARCH
 search = st.sidebar.text_input(
-    "🔎 Search (area / crime / date)"
+    "🔎 Search"
 )
 
 # KPI CARDS
