@@ -242,7 +242,7 @@ with tab2:
 
     col1, col2 = st.columns(2)
 
-    center = [20.5937, 78.9629]
+    center = [23.5, 78.9]
 
     # -------------------------
     # CLUSTER MAP
@@ -286,7 +286,7 @@ with tab2:
     # -------------------------
     with col2:
 
-        st.markdown("## 🔥 Heatmap")
+        st.markdown("## 🔥 Crime Density Heatmap")
 
         m2 = folium.Map(
             location=center,
@@ -294,13 +294,28 @@ with tab2:
             tiles=tile
         )
 
-        # Weighted heatmap
-        heat_df = (
-            f.groupby(['Latitude', 'Longitude'])
+        # Crime count by area
+        area_counts = (
+            f.groupby('Area')
             .size()
-            .reset_index(name='count')
+            .reset_index(name='Crime_Count')
         )
 
+        # Average coordinates of each area
+        city_coords = (
+            f.groupby('Area')[['Latitude', 'Longitude']]
+            .mean()
+            .reset_index()
+        )
+
+        # Merge both
+        heat_df = pd.merge(
+            area_counts,
+            city_coords,
+            on='Area'
+        )
+
+        # Weighted heatmap data
         heat_data = []
 
         for _, row in heat_df.iterrows():
@@ -308,18 +323,17 @@ with tab2:
             heat_data.append([
                 float(row['Latitude']),
                 float(row['Longitude']),
-                int(row['count'])
+                int(row['Crime_Count']) * 10
             ])
 
-        if len(heat_data) > 0:
-
-            HeatMap(
-                heat_data,
-                radius=35,
-                blur=20,
-                min_opacity=0.5,
-                max_zoom=10
-            ).add_to(m2)
+        # Heatmap layer
+        HeatMap(
+            heat_data,
+            radius=50,
+            blur=30,
+            min_opacity=0.4,
+            max_zoom=10
+        ).add_to(m2)
 
         st_folium(
             m2,
