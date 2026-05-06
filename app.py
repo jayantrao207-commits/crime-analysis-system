@@ -207,15 +207,7 @@ with c1:
     """, unsafe_allow_html=True)
 
 with c2:
-    if len(f) > 0:
-
-    top_area = f['Area'].value_counts().idxmax()
-    top_crime = f['Crime_Type'].value_counts().idxmax()
-
-else:
-
-    top_area = "No Data"
-    top_crime = "No Data"
+   
 
     top_area = f['Area'].value_counts().idxmax()
 
