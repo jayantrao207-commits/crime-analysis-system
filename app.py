@@ -153,53 +153,6 @@ search = st.sidebar.text_input(
     "🔎 Search"
 )
 
-
-
-# KPI CARDS
-# =====================================================
-
-c1, c2, c3, c4 = st.columns(4)
-
-with c1:
-    st.metric(
-        "📊 Total Crimes",
-        total_crimes
-    )
-
-with c2:
-    st.metric(
-        "📍 Top Area",
-        top_area
-    )
-
-with c3:
-    st.metric(
-        "🚨 Top Crime",
-        top_crime
-    )
-
-with c4:
-    st.metric(
-        "🧭 Areas Covered",
-        total_areas
-    )
-
-# =====================================================
-# EMPTY DATA WARNING
-# =====================================================
-
-if total_crimes == 0:
-
-    st.warning(
-        "⚠ No matching records found. Try another search."
-    )
-
-else:
-
-    st.success(
-        f"✅ {total_crimes} matching crime records found."
-    )
-
 # MAP STYLE
 tile = st.sidebar.selectbox(
     "🧭 Map Style",
@@ -254,7 +207,6 @@ with c1:
     """, unsafe_allow_html=True)
 
 with c2:
-   
 
     top_area = f['Area'].value_counts().idxmax()
 
