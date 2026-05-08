@@ -1,10 +1,11 @@
 # =========================================================
-# CRIME ANALYTICS DASHBOARD
+# CRIME ANALYTICS + AI PREDICTION DASHBOARD
 # =========================================================
 
 import streamlit as st
 import pandas as pd
 import folium
+import joblib
 
 from streamlit_folium import st_folium
 from folium.plugins import MarkerCluster, HeatMap
@@ -14,7 +15,7 @@ from folium.plugins import MarkerCluster, HeatMap
 # =========================================================
 
 st.set_page_config(
-    page_title="Crime Analytics Dashboard",
+    page_title="AI Crime Prediction Dashboard",
     layout="wide"
 )
 
@@ -56,10 +57,6 @@ section[data-testid="stSidebar"] {
     margin-bottom: 20px;
 }
 
-h1,h2,h3,h4 {
-    color: white;
-}
-
 .metric {
     font-size: 40px;
     font-weight: bold;
@@ -73,12 +70,12 @@ h1,h2,h3,h4 {
 # =========================================================
 
 st.markdown(
-    "<div class='title'>🚔 Crime Analytics Dashboard</div>",
+    "<div class='title'>🚔 AI Crime Prediction Dashboard</div>",
     unsafe_allow_html=True
 )
 
 st.markdown(
-    "<div class='subtitle'>Interactive monitoring with filters, maps & insights</div>",
+    "<div class='subtitle'>Crime analytics, maps & AI prediction system</div>",
     unsafe_allow_html=True
 )
 
@@ -94,6 +91,17 @@ df['Date_Time'] = pd.to_datetime(df['Date_Time'])
 
 df['date'] = df['Date_Time'].dt.date
 df['hour'] = df['Date_Time'].dt.hour
+df['month'] = df['Date_Time'].dt.month
+df['weekday'] = df['Date_Time'].dt.weekday
+
+# =========================================================
+# LOAD ML FILES
+# =========================================================
+
+model = joblib.load("crime_model.pkl")
+scaler = joblib.load("scaler.pkl")
+area_encoder = joblib.load("area_encoder.pkl")
+crime_encoder = joblib.load("crime_encoder.pkl")
 
 # =========================================================
 # FIXED CITY COORDINATES
@@ -102,15 +110,10 @@ df['hour'] = df['Date_Time'].dt.hour
 city_coords = {
 
     "Delhi": [28.6139, 77.2090],
-
     "Mumbai": [19.0760, 72.8777],
-
     "Jaipur": [26.9124, 75.7873],
-
     "Lucknow": [26.8467, 80.9462],
-
     "Chandigarh": [30.7333, 76.7794],
-
     "Panipat": [29.3909, 76.9635]
 }
 
@@ -121,26 +124,26 @@ city_coords = {
 st.sidebar.markdown("# 🎛️ Control Panel")
 st.sidebar.markdown("---")
 
-# AREA
+# AREA FILTER
 area = st.sidebar.selectbox(
     "📍 Area",
     ["All"] + sorted(df['Area'].unique())
 )
 
-# CRIME TYPE
+# CRIME FILTER
 crime = st.sidebar.multiselect(
     "🚨 Crime Type",
     sorted(df['Crime_Type'].unique()),
     default=sorted(df['Crime_Type'].unique())
 )
 
-# DATE
+# DATE FILTER
 date_range = st.sidebar.date_input(
     "📅 Date Range",
     [df['date'].min(), df['date'].max()]
 )
 
-# HOUR
+# HOUR FILTER
 hour_range = st.sidebar.slider(
     "⏱️ Hour of Day",
     0,
@@ -149,9 +152,7 @@ hour_range = st.sidebar.slider(
 )
 
 # SEARCH
-search = st.sidebar.text_input(
-    "🔎 Search"
-)
+search = st.sidebar.text_input("🔎 Search")
 
 # MAP STYLE
 tile = st.sidebar.selectbox(
@@ -241,9 +242,10 @@ with c4:
 # TABS
 # =========================================================
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Overview",
     "🗺️ Maps",
+    "🤖 AI Prediction",
     "📋 Data"
 ])
 
@@ -295,9 +297,7 @@ with tab2:
 
     col1, col2 = st.columns(2)
 
-    # =====================================================
     # CLUSTER MAP
-    # =====================================================
 
     with col1:
 
@@ -311,7 +311,6 @@ with tab2:
 
         cluster = MarkerCluster().add_to(m1)
 
-        # USE FIXED CITY COORDS
         for _, row in f.iterrows():
 
             area_name = row['Area']
@@ -338,9 +337,7 @@ with tab2:
             height=500
         )
 
-    # =====================================================
     # HEATMAP
-    # =====================================================
 
     with col2:
 
@@ -352,7 +349,6 @@ with tab2:
             tiles=tile
         )
 
-        # CRIME COUNT BY AREA
         area_counts = (
             f.groupby('Area')
             .size()
@@ -390,10 +386,73 @@ with tab2:
         )
 
 # =========================================================
-# DATA TAB
+# AI PREDICTION TAB
 # =========================================================
 
 with tab3:
+
+    st.subheader("🤖 AI Crime Prediction")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        input_area = st.selectbox(
+            "📍 Select Area",
+            sorted(df['Area'].unique())
+        )
+
+        input_hour = st.slider(
+            "⏱️ Hour",
+            0,
+            23,
+            12
+        )
+
+    with col2:
+
+        input_month = st.slider(
+            "📅 Month",
+            1,
+            12,
+            1
+        )
+
+        input_weekday = st.slider(
+            "📆 Weekday",
+            0,
+            6,
+            1
+        )
+
+    if st.button("🔮 Predict Crime"):
+
+        area_encoded = area_encoder.transform([input_area])[0]
+
+        input_data = [[
+            area_encoded,
+            input_hour,
+            input_month,
+            input_weekday
+        ]]
+
+        input_scaled = scaler.transform(input_data)
+
+        prediction = model.predict(input_scaled)
+
+        predicted_crime = crime_encoder.inverse_transform(
+            prediction
+        )[0]
+
+        st.success(
+            f"🚨 Predicted Crime Type: {predicted_crime}"
+        )
+
+# =========================================================
+# DATA TAB
+# =========================================================
+
+with tab4:
 
     st.subheader("📋 Crime Records")
 
