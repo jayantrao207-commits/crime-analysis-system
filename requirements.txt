@@ -1,4 +1,9 @@
-streamlit==1.35.0
-pandas==2.2.2
-folium==0.14.0
-streamlit-folium==0.20.0
+streamlit
+pandas
+numpy
+matplotlib
+plotly
+folium
+streamlit-folium
+scikit-learn
+joblib
